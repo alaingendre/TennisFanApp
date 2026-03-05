@@ -84,6 +84,8 @@ class DataUpdater {
     
     /// Reload 2026 matches from the updated CSV into the database.
     static func reload2026(modelContext: ModelContext) {
+        print("  🔄 reload2026 called")
+        
         // Delete existing 2026 games
         let descriptor = FetchDescriptor<Game>(
             predicate: #Predicate<Game> { $0.season == "2026" }

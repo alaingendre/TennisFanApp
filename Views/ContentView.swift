@@ -146,8 +146,8 @@ struct ContentView: View {
                     loadAvailableYears()
                 }
             }
-            .task {
-                // Check for 2026 data updates in background
+            .task(id: availableYears.count) {
+                // Check for 2026 data updates once data is loaded
                 guard !availableYears.isEmpty else { return }
                 await checkForUpdates()
             }
@@ -177,8 +177,10 @@ struct ContentView: View {
     
     private func checkForUpdates() async {
         updateStatus = "Checking for updates..."
+        print("🔄 checkForUpdates started")
         
         let hasUpdate = await DataUpdater.checkForUpdate()
+        print("🔄 hasUpdate = \(hasUpdate)")
         
         if hasUpdate {
             updateStatus = "Updating 2026 data..."
@@ -186,13 +188,16 @@ struct ContentView: View {
             loadAvailableYears()
             lastUpdate = DataUpdater.lastUpdateDate()
             updateStatus = "✅ Updated!"
+            print("🔄 Update complete, years: \(availableYears)")
             
-            // Clear status after 3 seconds
             try? await Task.sleep(nanoseconds: 3_000_000_000)
             updateStatus = ""
         } else {
+            // Even if no update, make sure 2026 is in available years
+            loadAvailableYears()
             lastUpdate = DataUpdater.lastUpdateDate()
             updateStatus = ""
+            print("🔄 No update needed, years: \(availableYears)")
         }
     }
     
