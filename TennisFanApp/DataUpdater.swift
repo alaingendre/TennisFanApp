@@ -40,21 +40,27 @@ class DataUpdater {
                 return false
             }
             
-            // Normalize line endings (\r\n → \n) before counting
-            let normalized = csvString.replacingOccurrences(of: "\r\n", with: "\n").replacingOccurrences(of: "\r", with: "\n")
-            let lineCount = normalized.split(separator: "\n").count
+            // Normalize line endings and count lines
+            let normalized = csvString
+                .replacingOccurrences(of: "\r\n", with: "\n")
+                .replacingOccurrences(of: "\r", with: "\n")
+            let lines = normalized.components(separatedBy: "\n").filter { !$0.isEmpty }
+            let lineCount = lines.count
+            
+            print("  📊 Download: \(data.count) bytes, \(lineCount) lines (raw split: \(csvString.split(separator: "\n").count))")
+            
             guard normalized.contains("tourney_id"), lineCount > 1 else {
                 print("  ⚠️ Update check: invalid CSV content (\(data.count) bytes, \(lineCount) lines)")
                 print("  ⚠️ Preview: \(String(csvString.prefix(100)))")
                 return false
             }
             
-            // Compare with what we have using a simple hash (line count + byte count)
-            let newHash = "\(data.count)_\(lineCount)"
+            // Compare using byte count only (most reliable)
+            let newHash = "\(data.count)"
             let oldHash = UserDefaults.standard.string(forKey: lastHashKey) ?? ""
             
             if newHash == oldHash {
-                print("  ✅ 2026.csv unchanged (\(csvString.split(separator: "\n").count) lines)")
+                print("  ✅ 2026.csv unchanged (\(lineCount) lines)")
                 return false
             }
             
@@ -80,11 +86,12 @@ class DataUpdater {
     /// Parses new data first, only deletes old data if parsing succeeds.
     static func reload2026(modelContext: ModelContext) {
         let url = DataLoader.get2026URL()
-        guard let content = try? String(contentsOf: url, encoding: .utf8) else {
+        guard let rawContent = try? String(contentsOf: url, encoding: .utf8) else {
             print("  ⚠️ reload2026: can't read file")
             return
         }
         
+        let content = rawContent.replacingOccurrences(of: "\r\n", with: "\n").replacingOccurrences(of: "\r", with: "\n")
         let lines = content.split(separator: "\n")
         guard lines.count > 1 else {
             print("  ⚠️ reload2026: no data rows")
