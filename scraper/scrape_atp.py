@@ -211,24 +211,23 @@ def scrape_monthly_results(year, month):
             i += 1
             continue
         
-        # Check if this is a player row (has "first time" cell = first player of match)
-        first_cell = row.find("td", class_="first time")
-        if not first_cell:
-            # Could be second player row or something else
+        # Check if this is a player row
+        # Method 1: has "first time" cell (standard format)
+        # Method 2: has t-name + result cells but no colspan (match row without time)
+        p1_name_cell = row.find("td", class_="t-name")
+        p1_result_cell = row.find("td", class_="result")
+        
+        if not p1_name_cell or p1_name_cell.get("colspan") or not p1_result_cell:
             i += 1
             continue
         
-        # This is the first player (winner) row
-        # Next row should be the second player (loser)
+        # This is a player row — next row should be the opponent
         if i + 1 >= len(rows):
             i += 1
             continue
         
         row2 = rows[i + 1]
         
-        # Extract player 1 data
-        p1_name_cell = row.find("td", class_="t-name")
-        p1_result_cell = row.find("td", class_="result")
         p1_scores = row.find_all("td", class_="score")
         
         # Extract player 2 data
