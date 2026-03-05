@@ -13,65 +13,52 @@ class DataUpdater {
     static let csvURL = URL(string: "https://raw.githubusercontent.com/alaingendre/TennisFanApp/main/2026.csv")!
     
     private static let lastUpdateKey = "lastUpdate2026"
-    private static let lastSizeKey = "lastSize2026"
+    private static let lastHashKey = "lastHash2026"
     
     // MARK: - Check & Download
     
     /// Check if a newer 2026.csv is available and download it.
-    /// Returns true if new data was downloaded.
+    /// Returns true if new data was downloaded and saved.
     static func checkForUpdate() async -> Bool {
         do {
-            // HEAD request to check file size (fast, no full download)
-            var headRequest = URLRequest(url: csvURL)
-            headRequest.httpMethod = "HEAD"
-            headRequest.timeoutInterval = 10
+            // Download the file
+            var request = URLRequest(url: csvURL)
+            request.timeoutInterval = 15
+            request.cachePolicy = .reloadIgnoringLocalCacheData
             
-            let (_, headResponse) = try await URLSession.shared.data(for: headRequest)
-            guard let httpResponse = headResponse as? HTTPURLResponse,
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse,
                   httpResponse.statusCode == 200 else {
-                print("  ⚠️ Update check failed: bad response")
+                print("  ⚠️ Update check: bad HTTP response")
                 return false
             }
-            
-            let remoteSize = httpResponse.expectedContentLength
-            let localSize = Int64(UserDefaults.standard.integer(forKey: lastSizeKey))
-            
-            // If same size, no update needed
-            if remoteSize > 0 && remoteSize == localSize {
-                print("  ✅ 2026.csv is up to date (\(remoteSize) bytes)")
-                return false
-            }
-            
-            // Download the full file
-            print("  📥 Downloading updated 2026.csv (\(remoteSize) bytes)...")
-            let (data, _) = try await URLSession.shared.data(from: csvURL)
             
             guard let csvString = String(data: data, encoding: .utf8),
-                  csvString.contains("tourney_id") else {
-                print("  ⚠️ Downloaded file doesn't look like valid CSV")
+                  csvString.contains("tourney_id"),
+                  csvString.split(separator: "\n").count > 1 else {
+                print("  ⚠️ Update check: invalid CSV content")
                 return false
             }
             
-            let lineCount = csvString.components(separatedBy: "\n").count
-            print("  📥 Downloaded \(data.count) bytes, \(lineCount) lines")
+            // Compare with what we have using a simple hash (line count + byte count)
+            let newHash = "\(data.count)_\(csvString.split(separator: "\n").count)"
+            let oldHash = UserDefaults.standard.string(forKey: lastHashKey) ?? ""
             
-            // Only update if we got more data than what we have
-            let localURL = DataLoader.get2026URL()
-            if let existingContent = try? String(contentsOf: localURL, encoding: .utf8) {
-                let existingLines = existingContent.components(separatedBy: "\n").count
-                if lineCount <= existingLines {
-                    print("  ✅ No new matches (remote: \(lineCount) lines, local: \(existingLines) lines)")
-                    UserDefaults.standard.set(Int(remoteSize), forKey: lastSizeKey)
-                    return false
-                }
+            if newHash == oldHash {
+                print("  ✅ 2026.csv unchanged (\(csvString.split(separator: "\n").count) lines)")
+                return false
             }
             
             // Save to Documents
+            let localURL = DataLoader.get2026URL()
             try data.write(to: localURL)
-            UserDefaults.standard.set(Int(remoteSize), forKey: lastSizeKey)
+            
+            UserDefaults.standard.set(newHash, forKey: lastHashKey)
             UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: lastUpdateKey)
             
-            print("  ✅ Updated 2026.csv: \(lineCount) lines saved")
+            let lineCount = csvString.split(separator: "\n").count
+            print("  📥 Downloaded new 2026.csv: \(lineCount) lines, \(data.count) bytes")
             return true
             
         } catch {
@@ -83,10 +70,93 @@ class DataUpdater {
     // MARK: - Reload 2026 Data
     
     /// Reload 2026 matches from the updated CSV into the database.
+    /// Parses new data first, only deletes old data if parsing succeeds.
     static func reload2026(modelContext: ModelContext) {
-        print("  🔄 reload2026 called")
+        let url = DataLoader.get2026URL()
+        guard let content = try? String(contentsOf: url, encoding: .utf8) else {
+            print("  ⚠️ reload2026: can't read file")
+            return
+        }
         
-        // Delete existing 2026 games
+        let lines = content.split(separator: "\n")
+        guard lines.count > 1 else {
+            print("  ⚠️ reload2026: no data rows")
+            return
+        }
+        
+        // Build player dictionary from existing players
+        var playerDict: [String: Player] = [:]
+        if let players = try? modelContext.fetch(FetchDescriptor<Player>()) {
+            for p in players {
+                playerDict[p.name] = p
+            }
+        }
+        
+        // Parse new matches first (don't touch database yet)
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyyMMdd"
+        
+        struct ParsedMatch {
+            let matchKey: String
+            let tournamentName: String
+            let surface: String
+            let tourneyLevel: String
+            let drawSize: Int
+            let round: String
+            let bestOf: Int
+            let matchDate: Date
+            let score: String
+            let season: String
+            let winnerName: String
+            let loserName: String
+            let winnerSeed: Int?
+            let loserSeed: Int?
+        }
+        
+        var parsed: [ParsedMatch] = []
+        
+        for (i, line) in lines.enumerated() {
+            if i == 0 { continue }
+            
+            // Use proper CSV parsing (handle commas in quoted fields)
+            let col = parseCSVLine(String(line))
+            guard col.count >= 31 else { continue }
+            
+            let rawWinner = col[11]
+            let rawLoser = col[21]
+            guard !rawWinner.isEmpty, !rawLoser.isEmpty else { continue }
+            guard let matchDate = dateFormatter.date(from: col[6]) else { continue }
+            
+            // Match abbreviated names to existing players
+            let winnerName = matchName(rawWinner, in: playerDict) ?? rawWinner
+            let loserName = matchName(rawLoser, in: playerDict) ?? rawLoser
+            
+            parsed.append(ParsedMatch(
+                matchKey: "\(col[0])_\(col[7])",
+                tournamentName: col[1],
+                surface: col[2],
+                tourneyLevel: col[4],
+                drawSize: Int(col[3]) ?? 0,
+                round: col[30],
+                bestOf: Int(col[29]) ?? 3,
+                matchDate: matchDate,
+                score: col[28],
+                season: "2026",
+                winnerName: winnerName,
+                loserName: loserName,
+                winnerSeed: Int(col[9]),
+                loserSeed: Int(col[19])
+            ))
+        }
+        
+        guard !parsed.isEmpty else {
+            print("  ⚠️ reload2026: parsed 0 matches, keeping existing data")
+            return
+        }
+        
+        print("  🔄 reload2026: parsed \(parsed.count) matches, replacing old data...")
+        
+        // NOW delete old 2026 games (safe because we have new data ready)
         let descriptor = FetchDescriptor<Game>(
             predicate: #Predicate<Game> { $0.season == "2026" }
         )
@@ -97,21 +167,49 @@ class DataUpdater {
             print("  🗑️ Removed \(existing.count) old 2026 matches")
         }
         
-        // Reload from updated CSV
-        // We need the player dict and playerDB — fetch existing players
-        var playerDict: [String: Player] = [:]
-        if let players = try? modelContext.fetch(FetchDescriptor<Player>()) {
-            for p in players {
-                playerDict[p.name] = p
+        // Insert new matches
+        for m in parsed {
+            // Get or create winner
+            if playerDict[m.winnerName] == nil {
+                let p = Player(playerId: "", name: m.winnerName, hand: "U", countryCode: "")
+                modelContext.insert(p)
+                playerDict[m.winnerName] = p
             }
+            let winner = playerDict[m.winnerName]!
+            
+            // Get or create loser
+            if playerDict[m.loserName] == nil {
+                let p = Player(playerId: "", name: m.loserName, hand: "U", countryCode: "")
+                modelContext.insert(p)
+                playerDict[m.loserName] = p
+            }
+            let loser = playerDict[m.loserName]!
+            
+            let game = Game(
+                matchKey: m.matchKey,
+                tournamentName: m.tournamentName,
+                surface: m.surface,
+                tourneyLevel: m.tourneyLevel,
+                drawSize: m.drawSize,
+                round: m.round,
+                bestOf: m.bestOf,
+                matchDate: m.matchDate,
+                score: m.score,
+                season: "2026",
+                winner: winner,
+                loser: loser,
+                winnerSeed: m.winnerSeed,
+                loserSeed: m.loserSeed
+            )
+            modelContext.insert(game)
         }
         
-        let playerDB = loadPlayerDBQuick()
-        
-        // Load 2026 from Documents
-        load2026(modelContext: modelContext, playerDict: &playerDict, playerDB: playerDB)
-        
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+            print("  ✅ reload2026: \(parsed.count) matches saved")
+        } catch {
+            print("  ❌ reload2026 save failed: \(error)")
+        }
     }
     
     // MARK: - Helpers
@@ -121,94 +219,18 @@ class DataUpdater {
         return ts > 0 ? Date(timeIntervalSince1970: ts) : nil
     }
     
-    /// Quick player DB load (just for enrichment during 2026 reload)
-    private static func loadPlayerDBQuick() -> [String: (height: Int?, backhand: String?, birthdate: Date?)] {
-        guard let url = Bundle.main.url(forResource: "ATP_Database", withExtension: "csv"),
-              let content = try? String(contentsOf: url, encoding: .utf8) else { return [:] }
-        
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyyMMdd"
-        var db: [String: (height: Int?, backhand: String?, birthdate: Date?)] = [:]
-        
-        let lines = content.split(separator: "\n")
-        for (i, line) in lines.enumerated() {
-            if i == 0 { continue }
-            let col = line.split(separator: ",", omittingEmptySubsequences: false).map { 
-                String($0).trimmingCharacters(in: CharacterSet(charactersIn: "\""))
-            }
-            guard col.count >= 12 else { continue }
-            db[col[0]] = (Int(col[5]), col[10].isEmpty ? nil : col[10], dateFormatter.date(from: col[3]))
+    /// Parse CSV line handling quoted fields
+    private static func parseCSVLine(_ line: String) -> [String] {
+        var columns: [String] = []
+        var current = ""
+        var insideQuotes = false
+        for char in line {
+            if char == "\"" { insideQuotes.toggle() }
+            else if char == "," && !insideQuotes { columns.append(current); current = "" }
+            else { current.append(char) }
         }
-        return db
-    }
-    
-    /// Load 2026 matches from Documents CSV (reuses DataLoader's parsing logic)
-    private static func load2026(modelContext: ModelContext,
-                                  playerDict: inout [String: Player],
-                                  playerDB: [String: (height: Int?, backhand: String?, birthdate: Date?)]) {
-        let url = DataLoader.get2026URL()
-        guard let content = try? String(contentsOf: url, encoding: .utf8) else { return }
-        
-        let lines = content.split(separator: "\n")
-        guard lines.count > 1 else { return }
-        
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyyMMdd"
-        var added = 0
-        
-        // Simple column indices for 2024+ format (has indoor)
-        for (i, line) in lines.enumerated() {
-            if i == 0 { continue }
-            let col = String(line).split(separator: ",", omittingEmptySubsequences: false).map(String.init)
-            guard col.count >= 31 else { continue }
-            
-            let matchKey = "\(col[0])_\(col[7])"
-            let rawWinner = col[11]
-            let rawLoser = col[21]
-            guard !rawWinner.isEmpty, !rawLoser.isEmpty else { continue }
-            guard let matchDate = dateFormatter.date(from: col[6]) else { continue }
-            
-            // Match abbreviated names to existing players
-            let winnerName = matchName(rawWinner, in: playerDict) ?? rawWinner
-            let loserName = matchName(rawLoser, in: playerDict) ?? rawLoser
-            
-            // Get or create winner
-            if playerDict[winnerName] == nil {
-                let p = Player(playerId: col[8], name: winnerName, hand: "U", countryCode: "")
-                modelContext.insert(p)
-                playerDict[winnerName] = p
-            }
-            let winner = playerDict[winnerName]!
-            
-            // Get or create loser
-            if playerDict[loserName] == nil {
-                let p = Player(playerId: col[18], name: loserName, hand: "U", countryCode: "")
-                modelContext.insert(p)
-                playerDict[loserName] = p
-            }
-            let loser = playerDict[loserName]!
-            
-            let game = Game(
-                matchKey: matchKey,
-                tournamentName: col[1],
-                surface: col[2],
-                tourneyLevel: col[4],
-                drawSize: Int(col[3]) ?? 0,
-                round: col[30],
-                bestOf: Int(col[29]) ?? 3,
-                matchDate: matchDate,
-                score: col[28],
-                season: "2026",
-                winner: winner,
-                loser: loser,
-                winnerSeed: Int(col[9]),
-                loserSeed: Int(col[19])
-            )
-            modelContext.insert(game)
-            added += 1
-        }
-        
-        print("  2026: \(added) matches loaded from update")
+        columns.append(current)
+        return columns
     }
     
     /// Match abbreviated scraped name to existing full name
