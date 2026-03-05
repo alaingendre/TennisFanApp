@@ -201,7 +201,6 @@ class DataLoader {
     
     private static func loadPlayerDatabase() -> [String: (height: Int?, backhand: String?, birthdate: Date?)] {
         guard let url = Bundle.main.url(forResource: "ATP_Database", withExtension: "csv") else {
-            print("⚠️ ATP_Database.csv not found — skipping player enrichment.")
             return [:]
         }
         
@@ -227,7 +226,6 @@ class DataLoader {
             db[playerId] = (height, backhand, birthdate)
         }
         
-        print("  ATP Database: \(db.count) player profiles loaded")
         return db
     }
     
@@ -238,7 +236,6 @@ class DataLoader {
             let descriptor = FetchDescriptor<Player>()
             let existing = try modelContext.fetch(descriptor)
             if !existing.isEmpty {
-                print("Data already loaded (\(existing.count) players). Skipping.")
                 return
             }
         } catch {
@@ -262,11 +259,9 @@ class DataLoader {
         load2026FromDocuments(modelContext: modelContext, playerDict: &playerDict, playerDB: playerDB)
         
         let elapsed = CFAbsoluteTimeGetCurrent() - startTime
-        print("✅ All seasons loaded. \(playerDict.count) unique players. (\(String(format: "%.1f", elapsed))s)")
         
         do {
             try modelContext.save()
-            print("✅ Saved to database.")
         } catch {
             print("❌ Save failed: \(error.localizedDescription)")
         }
@@ -278,7 +273,6 @@ class DataLoader {
                                     playerDict: inout [String: Player],
                                     playerDB: [String: (height: Int?, backhand: String?, birthdate: Date?)]) {
         guard let url = Bundle.main.url(forResource: season, withExtension: "csv") else {
-            print("⚠️ \(season).csv not found in bundle — skipping.")
             return
         }
         
@@ -394,7 +388,6 @@ class DataLoader {
             print("❌ Failed to parse \(season).csv: \(error.localizedDescription)")
         }
         
-        print("  \(season): \(gamesAdded) matches loaded")
     }
     
     // MARK: - 2026 from Documents Directory
@@ -415,7 +408,6 @@ class DataLoader {
         }
         
         guard FileManager.default.fileExists(atPath: docsURL.path) else {
-            print("  ⚠️ No 2026.csv found — skipping.")
             return
         }
         
@@ -427,9 +419,7 @@ class DataLoader {
         do {
             let content = try String(contentsOf: docsURL, encoding: .utf8)
             let lines = content.split(separator: "\n")
-            print("  2026 (Documents): \(lines.count) lines")
             guard lines.count > 1 else {
-                print("  ⚠️ 2026.csv has no data rows")
                 return
             }
             
@@ -522,7 +512,6 @@ class DataLoader {
             print("  ❌ Failed to parse 2026.csv: \(error)")
         }
         
-        print("  2026: \(gamesAdded) matches loaded")
     }
     
     /// Write 2026 CSV data directly to Documents (bypasses Xcode bundle issues)
@@ -565,7 +554,6 @@ tourney_id,tourney_name,surface,draw_size,tourney_level,indoor,tourney_date,matc
 """
         do {
             try csvData.write(to: url, atomically: true, encoding: .utf8)
-            print("  ✅ Seeded 2026.csv from embedded data (\(csvData.count) chars)")
         } catch {
             print("  ❌ Failed to write embedded 2026.csv: \(error)")
         }

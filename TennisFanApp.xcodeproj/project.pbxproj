@@ -13,7 +13,6 @@
 		B5E60B292EDAAE7600B22C44 /* Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E60B282EDAAE7600B22C44 /* Game.swift */; };
 		B5E60B2B2EDAAEE900B22C44 /* PlayerGamesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E60B2A2EDAAEE900B22C44 /* PlayerGamesView.swift */; };
 		B5E60B2D2EDAAFA200B22C44 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E60B2C2EDAAFA200B22C44 /* ProfileView.swift */; };
-		B5E60B312EDE642C00B22C44 /* PlayerListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E60B302EDE642B00B22C44 /* PlayerListView.swift */; };
 		B5E60B352EDE6E0E00B22C44 /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E60B342EDE6E0E00B22C44 /* Utilities.swift */; };
 		B5E60B372EDEA79E00B22C44 /* 2025.csv in Resources */ = {isa = PBXBuildFile; fileRef = B5E60B362EDEA79E00B22C44 /* 2025.csv */; };
 		B5E60B392EDEA7AA00B22C44 /* ATP_Database.csv in Resources */ = {isa = PBXBuildFile; fileRef = B5E60B382EDEA7AA00B22C44 /* ATP_Database.csv */; };
@@ -33,7 +32,6 @@
 		B5E60B282EDAAE7600B22C44 /* Game.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Game.swift; sourceTree = "<group>"; };
 		B5E60B2A2EDAAEE900B22C44 /* PlayerGamesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerGamesView.swift; sourceTree = "<group>"; };
 		B5E60B2C2EDAAFA200B22C44 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
-		B5E60B302EDE642B00B22C44 /* PlayerListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerListView.swift; sourceTree = "<group>"; };
 		B5E60B342EDE6E0E00B22C44 /* Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
 		B5E60B362EDEA79E00B22C44 /* 2025.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = 2025.csv; sourceTree = "<group>"; };
 		B5E60B382EDEA7AA00B22C44 /* ATP_Database.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = ATP_Database.csv; sourceTree = "<group>"; };
@@ -108,7 +106,6 @@
 				B5E60B182EDAA77900B22C44 /* ContentView.swift */,
 				B5E60B2A2EDAAEE900B22C44 /* PlayerGamesView.swift */,
 				B5E60B2C2EDAAFA200B22C44 /* ProfileView.swift */,
-				B5E60B302EDE642B00B22C44 /* PlayerListView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -207,7 +204,6 @@
 				B5E60B292EDAAE7600B22C44 /* Game.swift in Sources */,
 				B5E60B352EDE6E0E00B22C44 /* Utilities.swift in Sources */,
 				B5E60B192EDAA77900B22C44 /* ContentView.swift in Sources */,
-				B5E60B312EDE642C00B22C44 /* PlayerListView.swift in Sources */,
 				B5E60B2B2EDAAEE900B22C44 /* PlayerGamesView.swift in Sources */,
 				B5E60B2D2EDAAFA200B22C44 /* ProfileView.swift in Sources */,
 			);

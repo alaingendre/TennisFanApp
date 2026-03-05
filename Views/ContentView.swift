@@ -192,10 +192,8 @@ struct ContentView: View {
         hasCheckedForUpdates = true
         
         updateStatus = "Checking for updates..."
-        print("🔄 checkForUpdates started")
         
         let hasUpdate = await DataUpdater.checkForUpdate()
-        print("🔄 hasUpdate = \(hasUpdate)")
         
         if hasUpdate {
             updateStatus = "Updating 2026 data..."
@@ -203,7 +201,6 @@ struct ContentView: View {
             loadAvailableYears()
             lastUpdate = DataUpdater.lastUpdateDate()
             updateStatus = "✅ Updated!"
-            print("🔄 Update complete, years: \(availableYears)")
             
             try? await Task.sleep(nanoseconds: 3_000_000_000)
             updateStatus = ""
@@ -212,7 +209,6 @@ struct ContentView: View {
             loadAvailableYears()
             lastUpdate = DataUpdater.lastUpdateDate()
             updateStatus = ""
-            print("🔄 No update needed, years: \(availableYears)")
         }
     }
     

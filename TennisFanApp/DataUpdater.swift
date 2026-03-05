@@ -30,13 +30,11 @@ class DataUpdater {
             
             guard let httpResponse = response as? HTTPURLResponse,
                   httpResponse.statusCode == 200 else {
-                print("  ⚠️ Update check: bad HTTP response")
                 return false
             }
             
             // Try UTF-8 first, then Latin1
             guard let csvString = String(data: data, encoding: .utf8) ?? String(data: data, encoding: .isoLatin1) else {
-                print("  ⚠️ Update check: can't decode data (\(data.count) bytes)")
                 return false
             }
             
@@ -47,11 +45,8 @@ class DataUpdater {
             let lines = normalized.components(separatedBy: "\n").filter { !$0.isEmpty }
             let lineCount = lines.count
             
-            print("  📊 Download: \(data.count) bytes, \(lineCount) lines (raw split: \(csvString.split(separator: "\n").count))")
             
             guard normalized.contains("tourney_id"), lineCount > 1 else {
-                print("  ⚠️ Update check: invalid CSV content (\(data.count) bytes, \(lineCount) lines)")
-                print("  ⚠️ Preview: \(String(csvString.prefix(100)))")
                 return false
             }
             
@@ -60,7 +55,6 @@ class DataUpdater {
             let oldHash = UserDefaults.standard.string(forKey: lastHashKey) ?? ""
             
             if newHash == oldHash {
-                print("  ✅ 2026.csv unchanged (\(lineCount) lines)")
                 return false
             }
             
@@ -71,11 +65,9 @@ class DataUpdater {
             UserDefaults.standard.set(newHash, forKey: lastHashKey)
             UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: lastUpdateKey)
             
-            print("  📥 Downloaded new 2026.csv: \(lineCount) lines, \(data.count) bytes")
             return true
             
         } catch {
-            print("  ⚠️ Update check failed: \(error.localizedDescription)")
             return false
         }
     }
@@ -87,14 +79,12 @@ class DataUpdater {
     static func reload2026(modelContext: ModelContext) {
         let url = DataLoader.get2026URL()
         guard let rawContent = try? String(contentsOf: url, encoding: .utf8) else {
-            print("  ⚠️ reload2026: can't read file")
             return
         }
         
         let content = rawContent.replacingOccurrences(of: "\r\n", with: "\n").replacingOccurrences(of: "\r", with: "\n")
         let lines = content.split(separator: "\n")
         guard lines.count > 1 else {
-            print("  ⚠️ reload2026: no data rows")
             return
         }
         
@@ -164,11 +154,9 @@ class DataUpdater {
         }
         
         guard !parsed.isEmpty else {
-            print("  ⚠️ reload2026: parsed 0 matches, keeping existing data")
             return
         }
         
-        print("  🔄 reload2026: parsed \(parsed.count) matches, replacing old data...")
         
         // NOW delete old 2026 games (safe because we have new data ready)
         let descriptor = FetchDescriptor<Game>(
@@ -178,7 +166,6 @@ class DataUpdater {
             for game in existing {
                 modelContext.delete(game)
             }
-            print("  🗑️ Removed \(existing.count) old 2026 matches")
         }
         
         // Insert new matches
@@ -220,7 +207,6 @@ class DataUpdater {
         
         do {
             try modelContext.save()
-            print("  ✅ reload2026: \(parsed.count) matches saved")
         } catch {
             print("  ❌ reload2026 save failed: \(error)")
         }
