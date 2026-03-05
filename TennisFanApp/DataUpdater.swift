@@ -34,15 +34,21 @@ class DataUpdater {
                 return false
             }
             
-            guard let csvString = String(data: data, encoding: .utf8),
-                  csvString.contains("tourney_id"),
-                  csvString.split(separator: "\n").count > 1 else {
-                print("  ⚠️ Update check: invalid CSV content")
+            // Try UTF-8 first, then Latin1
+            guard let csvString = String(data: data, encoding: .utf8) ?? String(data: data, encoding: .isoLatin1) else {
+                print("  ⚠️ Update check: can't decode data (\(data.count) bytes)")
+                return false
+            }
+            
+            let lineCount = csvString.split(separator: "\n").count
+            guard csvString.contains("tourney_id"), lineCount > 1 else {
+                print("  ⚠️ Update check: invalid CSV content (\(data.count) bytes, \(lineCount) lines)")
+                print("  ⚠️ Preview: \(String(csvString.prefix(100)))")
                 return false
             }
             
             // Compare with what we have using a simple hash (line count + byte count)
-            let newHash = "\(data.count)_\(csvString.split(separator: "\n").count)"
+            let newHash = "\(data.count)_\(lineCount)"
             let oldHash = UserDefaults.standard.string(forKey: lastHashKey) ?? ""
             
             if newHash == oldHash {
@@ -57,7 +63,6 @@ class DataUpdater {
             UserDefaults.standard.set(newHash, forKey: lastHashKey)
             UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: lastUpdateKey)
             
-            let lineCount = csvString.split(separator: "\n").count
             print("  📥 Downloaded new 2026.csv: \(lineCount) lines, \(data.count) bytes")
             return true
             
