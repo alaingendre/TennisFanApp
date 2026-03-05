@@ -15,6 +15,8 @@ struct ContentView: View {
     @State private var selectedYear = "2025"
     @State private var availableYears: [String] = []
     @State private var loadingStatus = ""
+    @State private var lastUpdate: Date? = DataUpdater.lastUpdateDate()
+    @State private var updateStatus = ""
     
     var filteredPlayers: [Player] {
         guard !searchText.isEmpty else { return [] }
@@ -118,10 +120,36 @@ struct ContentView: View {
                     }
                 }
             }
+            .overlay(alignment: .bottom) {
+                if !availableYears.isEmpty && !searchText.isEmpty == false {
+                    VStack(spacing: 4) {
+                        if !updateStatus.isEmpty {
+                            Text(updateStatus)
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                        if let date = lastUpdate {
+                            Text("2026 data updated: \(date.formatted(date: .abbreviated, time: .shortened))")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 6)
+                    .padding(.horizontal, 12)
+                    .background(.ultraThinMaterial)
+                    .cornerRadius(8)
+                    .padding(.bottom, 8)
+                }
+            }
             .onAppear {
                 if availableYears.isEmpty && !players.isEmpty {
                     loadAvailableYears()
                 }
+            }
+            .task {
+                // Check for 2026 data updates in background
+                guard !availableYears.isEmpty else { return }
+                await checkForUpdates()
             }
         }
     }
@@ -145,6 +173,27 @@ struct ContentView: View {
         
         loadingStatus = "Ready!"
         loadAvailableYears()
+    }
+    
+    private func checkForUpdates() async {
+        updateStatus = "Checking for updates..."
+        
+        let hasUpdate = await DataUpdater.checkForUpdate()
+        
+        if hasUpdate {
+            updateStatus = "Updating 2026 data..."
+            DataUpdater.reload2026(modelContext: modelContext)
+            loadAvailableYears()
+            lastUpdate = DataUpdater.lastUpdateDate()
+            updateStatus = "✅ Updated!"
+            
+            // Clear status after 3 seconds
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            updateStatus = ""
+        } else {
+            lastUpdate = DataUpdater.lastUpdateDate()
+            updateStatus = ""
+        }
     }
     
     private func loadAvailableYears() {
