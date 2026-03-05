@@ -6,8 +6,43 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A1A1A1A22F5700000000A002 /* Attendance.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A1A1A12F5700000000A001 /* Attendance.swift */; };
+		B5E60B192EDAA77900B22C44 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E60B182EDAA77900B22C44 /* ContentView.swift */; };
+		B5E60B272EDAAE0A00B22C44 /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E60B262EDAAE0A00B22C44 /* Player.swift */; };
+		B5E60B292EDAAE7600B22C44 /* Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E60B282EDAAE7600B22C44 /* Game.swift */; };
+		B5E60B2B2EDAAEE900B22C44 /* PlayerGamesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E60B2A2EDAAEE900B22C44 /* PlayerGamesView.swift */; };
+		B5E60B2D2EDAAFA200B22C44 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E60B2C2EDAAFA200B22C44 /* ProfileView.swift */; };
+		B5E60B312EDE642C00B22C44 /* PlayerListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E60B302EDE642B00B22C44 /* PlayerListView.swift */; };
+		B5E60B352EDE6E0E00B22C44 /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E60B342EDE6E0E00B22C44 /* Utilities.swift */; };
+		B5E60B372EDEA79E00B22C44 /* 2025.csv in Resources */ = {isa = PBXBuildFile; fileRef = B5E60B362EDEA79E00B22C44 /* 2025.csv */; };
+		B5E60B392EDEA7AA00B22C44 /* ATP_Database.csv in Resources */ = {isa = PBXBuildFile; fileRef = B5E60B382EDEA7AA00B22C44 /* ATP_Database.csv */; };
+		B5E60B412EE3FB6300B22C44 /* 2024.csv in Resources */ = {isa = PBXBuildFile; fileRef = B5E60B402EE3FB6300B22C44 /* 2024.csv */; };
+		C0C0C0022F5800000000C020 /* 2020.csv in Resources */ = {isa = PBXBuildFile; fileRef = C0C0C0012F5800000000C020 /* 2020.csv */; };
+		C0C0C0042F5800000000C021 /* 2021.csv in Resources */ = {isa = PBXBuildFile; fileRef = C0C0C0032F5800000000C021 /* 2021.csv */; };
+		C0C0C0062F5800000000C022 /* 2022.csv in Resources */ = {isa = PBXBuildFile; fileRef = C0C0C0052F5800000000C022 /* 2022.csv */; };
+		C0C0C0082F5800000000C023 /* 2023.csv in Resources */ = {isa = PBXBuildFile; fileRef = C0C0C0072F5800000000C023 /* 2023.csv */; };
+		E1E1E1022F6000000000E026 /* 2026.csv in Resources */ = {isa = PBXBuildFile; fileRef = E1E1E1012F6000000000E026 /* 2026.csv */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		A1A1A1A12F5700000000A001 /* Attendance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Attendance.swift; sourceTree = "<group>"; };
 		B5E60B132EDAA77900B22C44 /* TennisFanApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TennisFanApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B5E60B182EDAA77900B22C44 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		B5E60B262EDAAE0A00B22C44 /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
+		B5E60B282EDAAE7600B22C44 /* Game.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Game.swift; sourceTree = "<group>"; };
+		B5E60B2A2EDAAEE900B22C44 /* PlayerGamesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerGamesView.swift; sourceTree = "<group>"; };
+		B5E60B2C2EDAAFA200B22C44 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		B5E60B302EDE642B00B22C44 /* PlayerListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerListView.swift; sourceTree = "<group>"; };
+		B5E60B342EDE6E0E00B22C44 /* Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
+		B5E60B362EDEA79E00B22C44 /* 2025.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = 2025.csv; sourceTree = "<group>"; };
+		B5E60B382EDEA7AA00B22C44 /* ATP_Database.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = ATP_Database.csv; sourceTree = "<group>"; };
+		B5E60B402EE3FB6300B22C44 /* 2024.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = 2024.csv; sourceTree = "<group>"; };
+		C0C0C0012F5800000000C020 /* 2020.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = 2020.csv; sourceTree = "<group>"; };
+		C0C0C0032F5800000000C021 /* 2021.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = 2021.csv; sourceTree = "<group>"; };
+		C0C0C0052F5800000000C022 /* 2022.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = 2022.csv; sourceTree = "<group>"; };
+		C0C0C0072F5800000000C023 /* 2023.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = 2023.csv; sourceTree = "<group>"; };
+		E1E1E1012F6000000000E026 /* 2026.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = 2026.csv; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -32,8 +67,20 @@
 		B5E60B0A2EDAA77900B22C44 = {
 			isa = PBXGroup;
 			children = (
-				B5E60B152EDAA77900B22C44 /* TennisFanApp */,
+				B5E60B402EE3FB6300B22C44 /* 2024.csv */,
+				C0C0C0012F5800000000C020 /* 2020.csv */,
+				C0C0C0032F5800000000C021 /* 2021.csv */,
+				C0C0C0052F5800000000C022 /* 2022.csv */,
+				C0C0C0072F5800000000C023 /* 2023.csv */,
+				B5E60B362EDEA79E00B22C44 /* 2025.csv */,
+				E1E1E1012F6000000000E026 /* 2026.csv */,
+				B5E60B382EDEA7AA00B22C44 /* ATP_Database.csv */,
+				B5E60B342EDE6E0E00B22C44 /* Utilities.swift */,
+				B5E60B252EDAAC6400B22C44 /* ViewModels */,
+				B5E60B242EDAAC5B00B22C44 /* Views */,
+				B5E60B232EDAA7BD00B22C44 /* Models */,
 				B5E60B142EDAA77900B22C44 /* Products */,
+				B5E60B152EDAA77900B22C44 /* TennisFanApp */,
 			);
 			sourceTree = "<group>";
 		};
@@ -43,6 +90,34 @@
 				B5E60B132EDAA77900B22C44 /* TennisFanApp.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		B5E60B232EDAA7BD00B22C44 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				B5E60B262EDAAE0A00B22C44 /* Player.swift */,
+				A1A1A1A12F5700000000A001 /* Attendance.swift */,
+				B5E60B282EDAAE7600B22C44 /* Game.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		B5E60B242EDAAC5B00B22C44 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				B5E60B182EDAA77900B22C44 /* ContentView.swift */,
+				B5E60B2A2EDAAEE900B22C44 /* PlayerGamesView.swift */,
+				B5E60B2C2EDAAFA200B22C44 /* ProfileView.swift */,
+				B5E60B302EDE642B00B22C44 /* PlayerListView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		B5E60B252EDAAC6400B22C44 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = ViewModels;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -109,6 +184,14 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B5E60B392EDEA7AA00B22C44 /* ATP_Database.csv in Resources */,
+				B5E60B412EE3FB6300B22C44 /* 2024.csv in Resources */,
+				C0C0C0022F5800000000C020 /* 2020.csv in Resources */,
+				C0C0C0042F5800000000C021 /* 2021.csv in Resources */,
+				C0C0C0062F5800000000C022 /* 2022.csv in Resources */,
+				C0C0C0082F5800000000C023 /* 2023.csv in Resources */,
+				B5E60B372EDEA79E00B22C44 /* 2025.csv in Resources */,
+				E1E1E1022F6000000000E026 /* 2026.csv in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -119,6 +202,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B5E60B272EDAAE0A00B22C44 /* Player.swift in Sources */,
+				A1A1A1A22F5700000000A002 /* Attendance.swift in Sources */,
+				B5E60B292EDAAE7600B22C44 /* Game.swift in Sources */,
+				B5E60B352EDE6E0E00B22C44 /* Utilities.swift in Sources */,
+				B5E60B192EDAA77900B22C44 /* ContentView.swift in Sources */,
+				B5E60B312EDE642C00B22C44 /* PlayerListView.swift in Sources */,
+				B5E60B2B2EDAAEE900B22C44 /* PlayerGamesView.swift in Sources */,
+				B5E60B2D2EDAAFA200B22C44 /* ProfileView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -249,10 +340,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4S2W7AVP8N;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Tennis Fan";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.sports";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -265,6 +360,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.agendre.TennisFanApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -284,6 +380,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Tennis Fan";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.sports";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

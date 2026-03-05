@@ -1,0 +1,42 @@
+name: Scrape ATP Results
+
+on:
+  schedule:
+    - cron: '0 8 * * *'  # Daily at 8 AM UTC
+  workflow_dispatch:       # Manual trigger from GitHub UI
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install dependencies
+        run: pip install -r scraper/requirements.txt
+      
+      - name: Run scraper
+        run: python scraper/scrape_atp.py --output 2026.csv
+      
+      - name: Check for changes
+        id: check
+        run: |
+          if git diff --quiet 2026.csv 2>/dev/null; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "matches=$(tail -n +2 2026.csv | wc -l)" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Commit and push
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git config user.name "ATP Scraper Bot"
+          git config user.email "scraper@tennisfanapp.local"
+          git add 2026.csv
+          git commit -m "Update 2026 data — $(date +%Y-%m-%d) — ${{ steps.check.outputs.matches }} matches"
+          git push

@@ -1,0 +1,13 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+*.xcuserdatad/
+xcuserdata/
+
+# macOS
+.DS_Store
+
+# Old duplicate files
+*" 2"*
+*" 3"*
