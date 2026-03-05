@@ -146,10 +146,17 @@ struct ContentView: View {
                 if availableYears.isEmpty && !players.isEmpty {
                     loadAvailableYears()
                 }
-                // Check for 2026 updates once per session, after data is loaded
-                if !availableYears.isEmpty && !hasCheckedForUpdates {
-                    Task { await checkForUpdates() }
+            }
+            .task {
+                // Wait for data to be available, then check for updates
+                // This runs once when the view first appears
+                while availableYears.isEmpty {
+                    try? await Task.sleep(nanoseconds: 200_000_000) // 0.2s
+                    if !players.isEmpty && availableYears.isEmpty {
+                        loadAvailableYears()
+                    }
                 }
+                await checkForUpdates()
             }
         }
     }
@@ -159,6 +166,8 @@ struct ContentView: View {
         let descriptor = FetchDescriptor<Player>()
         if let existing = try? modelContext.fetch(descriptor), !existing.isEmpty {
             loadAvailableYears()
+            // Still check for 2026 updates on subsequent launches
+            await checkForUpdates()
             return
         }
         
@@ -173,6 +182,9 @@ struct ContentView: View {
         
         loadingStatus = "Ready!"
         loadAvailableYears()
+        
+        // Check for 2026 updates after initial load
+        await checkForUpdates()
     }
     
     private func checkForUpdates() async {
