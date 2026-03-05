@@ -40,8 +40,10 @@ class DataUpdater {
                 return false
             }
             
-            let lineCount = csvString.split(separator: "\n").count
-            guard csvString.contains("tourney_id"), lineCount > 1 else {
+            // Normalize line endings (\r\n → \n) before counting
+            let normalized = csvString.replacingOccurrences(of: "\r\n", with: "\n").replacingOccurrences(of: "\r", with: "\n")
+            let lineCount = normalized.split(separator: "\n").count
+            guard normalized.contains("tourney_id"), lineCount > 1 else {
                 print("  ⚠️ Update check: invalid CSV content (\(data.count) bytes, \(lineCount) lines)")
                 print("  ⚠️ Preview: \(String(csvString.prefix(100)))")
                 return false

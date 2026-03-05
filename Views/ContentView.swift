@@ -17,6 +17,7 @@ struct ContentView: View {
     @State private var loadingStatus = ""
     @State private var lastUpdate: Date? = DataUpdater.lastUpdateDate()
     @State private var updateStatus = ""
+    @State private var hasCheckedForUpdates = false
     
     var filteredPlayers: [Player] {
         guard !searchText.isEmpty else { return [] }
@@ -176,6 +177,9 @@ struct ContentView: View {
     }
     
     private func checkForUpdates() async {
+        guard !hasCheckedForUpdates else { return }
+        hasCheckedForUpdates = true
+        
         updateStatus = "Checking for updates..."
         print("🔄 checkForUpdates started")
         
