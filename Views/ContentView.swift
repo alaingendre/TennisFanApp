@@ -146,11 +146,10 @@ struct ContentView: View {
                 if availableYears.isEmpty && !players.isEmpty {
                     loadAvailableYears()
                 }
-            }
-            .task(id: availableYears.count) {
-                // Check for 2026 data updates once data is loaded
-                guard !availableYears.isEmpty else { return }
-                await checkForUpdates()
+                // Check for 2026 updates once per session, after data is loaded
+                if !availableYears.isEmpty && !hasCheckedForUpdates {
+                    Task { await checkForUpdates() }
+                }
             }
         }
     }
