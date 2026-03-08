@@ -39,6 +39,7 @@ struct PlayerGamesView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var allAttendance: [Attendance]
     @State private var playerGames: [Game] = []
+    @State private var showMetric = true
     
     var attendedKeys: Set<String> {
         Set(allAttendance.map { $0.matchKey })
@@ -90,11 +91,17 @@ struct PlayerGamesView: View {
                                     .foregroundColor(.secondary)
                             }
                             if let ht = player.height {
-                                let feet = ht * 100 / 2540
-                                let inches = (ht * 100 / 254) % 10
-                                Label("\(feet)'\(inches)\" (\(ht)cm)", systemImage: "ruler")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                                Button(action: { showMetric.toggle() }) {
+                                    let totalInches = Double(ht) / 2.54
+                                    let feet = Int(totalInches) / 12
+                                    let inches = Int(totalInches) % 12
+                                    let meters = String(format: "%.2f", Double(ht) / 100.0)
+                                    Label(showMetric ? "\(meters)m" : "\(feet)'\(inches)\"",
+                                          systemImage: "ruler")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                }
+                                .buttonStyle(.plain)
                             }
                         }
                         HStack(spacing: 12) {
