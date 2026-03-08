@@ -236,7 +236,12 @@ class DataLoader {
             let playerId = col[0]
             let height = toInt(col[5])
             let backhand = col[10].isEmpty ? nil : col[10]
-            let birthdate = dateFormatter.date(from: col[3])
+            let bdStr = col[3].trimmingCharacters(in: .whitespacesAndNewlines)
+            let birthdate = dateFormatter.date(from: bdStr)
+            
+            if playerId == "A0E2" {
+                print("  DEBUG ATP_DB: Alcaraz id=[\(playerId)] bd=[\(bdStr)] parsed=\(String(describing: birthdate)) ht=\(String(describing: height))")
+            }
             
             db[playerId] = (height, backhand, birthdate)
         }
