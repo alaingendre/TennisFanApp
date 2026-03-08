@@ -92,8 +92,41 @@ def fetch(url, delay=2):
 def discover_tournaments(year):
     """Find all ATP tournament URLs for a given year."""
     tournaments = []
+    seen_urls = set()
     
-    # Scan each month's results page for tournament links
+    # Known major tournaments that might not appear on monthly results pages
+    KNOWN_TOURNAMENTS = [
+        {"slug": "australian-open", "name": "Australian Open", "level": "G"},
+        {"slug": "roland-garros", "name": "Roland Garros", "level": "G"},
+        {"slug": "wimbledon", "name": "Wimbledon", "level": "G"},
+        {"slug": "us-open", "name": "US Open", "level": "G"},
+        {"slug": "indian-wells", "name": "Indian Wells", "level": "M"},
+        {"slug": "miami", "name": "Miami", "level": "M"},
+        {"slug": "monte-carlo", "name": "Monte Carlo", "level": "M"},
+        {"slug": "madrid", "name": "Madrid", "level": "M"},
+        {"slug": "rome", "name": "Rome", "level": "M"},
+        {"slug": "canadian-open", "name": "Canadian Open", "level": "M"},
+        {"slug": "cincinnati", "name": "Cincinnati", "level": "M"},
+        {"slug": "shanghai", "name": "Shanghai", "level": "M"},
+        {"slug": "paris", "name": "Paris", "level": "M"},
+        {"slug": "united-cup", "name": "United Cup", "level": "D"},
+        {"slug": "davis-cup", "name": "Davis Cup", "level": "D"},
+        {"slug": "atp-finals", "name": "ATP Finals", "level": "F"},
+    ]
+    
+    # Add known tournaments first
+    for t in KNOWN_TOURNAMENTS:
+        url = f"/{t['slug']}/{year}/atp-men/"
+        if url not in seen_urls:
+            seen_urls.add(url)
+            tournaments.append({
+                'url': url,
+                'slug': t['slug'],
+                'name': t['name'],
+                'level': t['level'],
+            })
+    
+    # Also scan monthly results pages for additional tournaments
     for month in range(1, 13):
         if year == date.today().year and month > date.today().month:
             break
@@ -102,23 +135,25 @@ def discover_tournaments(year):
         if not html:
             continue
         
-        # Extract tournament URLs
         urls = re.findall(r'href="(/[^/]+/' + str(year) + r'/atp-men/)"', html)
         for url in urls:
+            if url in seen_urls:
+                continue
+            
             slug = url.split('/')[1]
             name_guess = slug.replace('-', ' ').title()
             
             level = guess_level(name_guess)
-            if not level:  # Skip challengers, futures, UTR
+            if not level:
                 continue
             
-            if url not in [t['url'] for t in tournaments]:
-                tournaments.append({
-                    'url': url,
-                    'slug': slug,
-                    'name': name_guess,
-                    'level': level,
-                })
+            seen_urls.add(url)
+            tournaments.append({
+                'url': url,
+                'slug': slug,
+                'name': name_guess,
+                'level': level,
+            })
     
     return tournaments
 

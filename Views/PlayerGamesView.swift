@@ -45,11 +45,13 @@ struct PlayerGamesView: View {
     }
     
     var pastGames: [Game] {
-        playerGames.filter { $0.matchDate < Date() }
+        // A match is "past" if it has a score OR its date is before today
+        playerGames.filter { !$0.score.isEmpty || $0.matchDate < Date() }
     }
     
     var upcomingGames: [Game] {
-        playerGames.filter { $0.matchDate >= Date() }
+        // A match is "upcoming" only if it has NO score AND its date is today or later
+        playerGames.filter { $0.score.isEmpty && $0.matchDate >= Date() }
     }
     
     var winsCount: Int {
@@ -88,7 +90,9 @@ struct PlayerGamesView: View {
                                     .foregroundColor(.secondary)
                             }
                             if let ht = player.height {
-                                Label("\(ht) cm", systemImage: "ruler")
+                                let feet = ht * 100 / 2540
+                                let inches = (ht * 100 / 254) % 10
+                                Label("\(feet)'\(inches)\" (\(ht)cm)", systemImage: "ruler")
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                             }
