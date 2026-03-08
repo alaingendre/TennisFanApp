@@ -233,11 +233,28 @@ class DataUpdater {
         return columns
     }
     
-    /// Match abbreviated scraped name to existing full name
+    /// Match scraped name to existing full name
     private static func matchName(_ scraped: String, in dict: [String: Player]) -> String? {
         if dict[scraped] != nil { return scraped }
         
         let parts = scraped.split(separator: " ").map(String.init)
+        
+        // Case 1: Single word name like "Medvedev" → "Daniil Medvedev"
+        if parts.count == 1 {
+            let lastName = scraped.lowercased()
+            var matches: [String] = []
+            for (fullName, _) in dict {
+                let fullParts = fullName.split(separator: " ").map(String.init)
+                guard fullParts.count >= 2 else { continue }
+                if fullParts.dropFirst().joined(separator: " ").lowercased() == lastName {
+                    matches.append(fullName)
+                }
+            }
+            if matches.count == 1 { return matches[0] }
+            return nil
+        }
+        
+        // Case 2: "Lastname F." format
         guard parts.count >= 2 else { return nil }
         let lastPart = parts.last!
         guard lastPart.count <= 2 || (lastPart.count == 2 && lastPart.hasSuffix(".")) else { return nil }

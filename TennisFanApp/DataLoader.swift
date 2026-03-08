@@ -52,21 +52,37 @@ class DataLoader {
         // If exact match exists, use it
         if playerDict[trimmed] != nil { return trimmed }
         
-        // Parse scraped name: "Lastname F." or "Lastname-Part F." or "De Lastname F."
-        // The initial is always the last part (single letter + optional period)
         let parts = trimmed.split(separator: " ").map(String.init)
+        
+        // Case 1: Single word name like "Medvedev", "Alcaraz"
+        // Match to "Daniil Medvedev", "Carlos Alcaraz" by last name
+        if parts.count == 1 {
+            let lastName = trimmed.lowercased()
+            var matches: [String] = []
+            for (fullName, _) in playerDict {
+                let fullParts = fullName.split(separator: " ").map(String.init)
+                guard fullParts.count >= 2 else { continue }
+                let fullLastName = fullParts.dropFirst().joined(separator: " ").lowercased()
+                if fullLastName == lastName {
+                    matches.append(fullName)
+                }
+            }
+            // Only return if exactly one match (avoid ambiguity)
+            if matches.count == 1 { return matches[0] }
+            return nil
+        }
+        
+        // Case 2: "Lastname F." format with initial
         guard parts.count >= 2 else { return nil }
         
         let lastPart = parts.last!
-        // Check if last part is an initial (1-2 chars, possibly with period)
         let isInitial = lastPart.count <= 2 || (lastPart.count == 2 && lastPart.hasSuffix("."))
         
-        guard isInitial else { return nil } // Not an abbreviated name
+        guard isInitial else { return nil }
         
         let initial = lastPart.prefix(1).uppercased()
         let lastName = parts.dropLast().joined(separator: " ")
         
-        // Search existing players for matching last name + first initial
         for (fullName, _) in playerDict {
             let fullParts = fullName.split(separator: " ").map(String.init)
             guard fullParts.count >= 2 else { continue }
@@ -74,7 +90,6 @@ class DataLoader {
             let fullFirstName = fullParts[0]
             let fullLastName = fullParts.dropFirst().joined(separator: " ")
             
-            // Compare last names (case-insensitive, handle hyphens)
             let lastNameNorm = lastName.lowercased().replacingOccurrences(of: "-", with: " ")
             let fullLastNameNorm = fullLastName.lowercased().replacingOccurrences(of: "-", with: " ")
             
