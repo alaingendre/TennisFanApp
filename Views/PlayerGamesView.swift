@@ -59,6 +59,13 @@ struct PlayerGamesView: View {
     var lossesCount: Int {
         playerGames.filter { $0.loser.playerId == player.playerId }.count
     }
+    
+    var playerAge: Int? {
+        guard let birthdate = player.birthdate else { return nil }
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year], from: birthdate, to: Date())
+        return components.year
+    }
 
     var body: some View {
         List {
@@ -75,8 +82,8 @@ struct PlayerGamesView: View {
                             Label(player.countryCode, systemImage: "globe")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
-                            if player.hand != "U" {
-                                Label(player.hand == "R" ? "Right" : "Left", systemImage: "hand.raised")
+                            if let age = playerAge {
+                                Label("\(age) yrs", systemImage: "calendar")
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                             }
@@ -86,10 +93,17 @@ struct PlayerGamesView: View {
                                     .foregroundColor(.secondary)
                             }
                         }
-                        if let bh = player.backhand {
-                            Text("Backhand: \(bh == "2H" ? "Two-handed" : "One-handed")")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                        HStack(spacing: 12) {
+                            if player.hand != "U" {
+                                Label(player.hand == "R" ? "Right-handed" : "Left-handed", systemImage: "hand.raised")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            if let bh = player.backhand {
+                                Text("• \(bh == "2H" ? "Two-handed BH" : "One-handed BH")")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
                     }
                     Spacer()
