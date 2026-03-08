@@ -54,21 +54,27 @@ class DataLoader {
         
         let parts = trimmed.split(separator: " ").map(String.init)
         
-        // Case 1: Single word name like "Medvedev", "Alcaraz"
-        // Match to "Daniil Medvedev", "Carlos Alcaraz" by last name
+        // Case 1: Single word name like "Medvedev", "Alcaraz", "Zverev"
+        // Match to "Daniil Medvedev", "Carlos Alcaraz", "Alexander Zverev" by last name
         if parts.count == 1 {
             let lastName = trimmed.lowercased()
-            var matches: [String] = []
-            for (fullName, _) in playerDict {
+            var matches: [(name: String, player: Player)] = []
+            for (fullName, player) in playerDict {
                 let fullParts = fullName.split(separator: " ").map(String.init)
                 guard fullParts.count >= 2 else { continue }
                 let fullLastName = fullParts.dropFirst().joined(separator: " ").lowercased()
                 if fullLastName == lastName {
-                    matches.append(fullName)
+                    matches.append((fullName, player))
                 }
             }
-            // Only return if exactly one match (avoid ambiguity)
-            if matches.count == 1 { return matches[0] }
+            if matches.count == 1 { return matches[0].name }
+            // Multiple matches: pick the one with the lowest (best) playerId number
+            // or the most common one — heuristic: shorter playerId = more established player
+            if matches.count > 1 {
+                // Sort by playerId length (shorter = older/more established player ID)
+                let sorted = matches.sorted { $0.player.playerId.count < $1.player.playerId.count }
+                return sorted[0].name
+            }
             return nil
         }
         

@@ -239,18 +239,22 @@ class DataUpdater {
         
         let parts = scraped.split(separator: " ").map(String.init)
         
-        // Case 1: Single word name like "Medvedev" → "Daniil Medvedev"
+        // Case 1: Single word name like "Medvedev", "Zverev"
         if parts.count == 1 {
             let lastName = scraped.lowercased()
-            var matches: [String] = []
-            for (fullName, _) in dict {
+            var matches: [(name: String, player: Player)] = []
+            for (fullName, player) in dict {
                 let fullParts = fullName.split(separator: " ").map(String.init)
                 guard fullParts.count >= 2 else { continue }
                 if fullParts.dropFirst().joined(separator: " ").lowercased() == lastName {
-                    matches.append(fullName)
+                    matches.append((fullName, player))
                 }
             }
-            if matches.count == 1 { return matches[0] }
+            if matches.count == 1 { return matches[0].name }
+            if matches.count > 1 {
+                let sorted = matches.sorted { $0.player.playerId.count < $1.player.playerId.count }
+                return sorted[0].name
+            }
             return nil
         }
         
