@@ -39,7 +39,7 @@ struct PlayerGamesView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var allAttendance: [Attendance]
     @State private var playerGames: [Game] = []
-    @State private var showMetric = true
+    @AppStorage("useMetricHeight") private var showMetric = true
     
     var attendedKeys: Set<String> {
         Set(allAttendance.map { $0.matchKey })
@@ -91,15 +91,19 @@ struct PlayerGamesView: View {
                                     .foregroundColor(.secondary)
                             }
                             if let ht = player.height {
-                                Button(action: { showMetric.toggle() }) {
+                                Button(action: { withAnimation(.easeInOut(duration: 0.2)) { showMetric.toggle() } }) {
                                     let totalInches = Double(ht) / 2.54
                                     let feet = Int(totalInches) / 12
                                     let inches = Int(totalInches) % 12
                                     let meters = String(format: "%.2f", Double(ht) / 100.0)
-                                    Label(showMetric ? "\(meters)m" : "\(feet)'\(inches)\"",
-                                          systemImage: "ruler")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "ruler")
+                                        Text(showMetric ? "\(meters)m" : "\(feet)'\(inches)\"")
+                                        Image(systemName: "arrow.left.arrow.right")
+                                            .font(.caption2)
+                                    }
+                                    .font(.subheadline)
+                                    .foregroundColor(.blue)
                                 }
                                 .buttonStyle(.plain)
                             }
