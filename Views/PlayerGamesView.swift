@@ -77,40 +77,39 @@ struct PlayerGamesView: View {
                 HStack {
                     Text(flag(for: player.countryCode))
                         .font(.system(size: 60))
-                    VStack(alignment: .leading, spacing: 6) {
+                    VStack(alignment: .leading, spacing: 8) {
                         Text(player.name)
-                            .font(.title)
+                            .font(.title2)
                             .bold()
-                        HStack(spacing: 12) {
-                            Label(player.countryCode, systemImage: "globe")
+                        
+                        // Row 1: Country, Age, Height
+                        HStack(spacing: 16) {
+                            Text(player.countryCode)
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                             if let age = playerAge {
-                                Label("\(age) yrs", systemImage: "calendar")
+                                Text("\(age) yrs")
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                             }
                             if let ht = player.height {
-                                Button(action: { withAnimation(.easeInOut(duration: 0.2)) { showMetric.toggle() } }) {
+                                Button(action: { withAnimation { showMetric.toggle() } }) {
                                     let totalInches = Double(ht) / 2.54
                                     let feet = Int(totalInches) / 12
                                     let inches = Int(totalInches) % 12
                                     let meters = String(format: "%.2f", Double(ht) / 100.0)
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "ruler")
-                                        Text(showMetric ? "\(meters)m" : "\(feet)'\(inches)\"")
-                                        Image(systemName: "arrow.left.arrow.right")
-                                            .font(.caption2)
-                                    }
-                                    .font(.subheadline)
-                                    .foregroundColor(.blue)
+                                    Text(showMetric ? "\(meters)m" : "\(feet)'\(inches)\"")
+                                        .font(.subheadline)
+                                        .foregroundColor(.blue)
                                 }
                                 .buttonStyle(.plain)
                             }
                         }
-                        HStack(spacing: 12) {
+                        
+                        // Row 2: Hand, Backhand
+                        HStack(spacing: 8) {
                             if player.hand != "U" {
-                                Label(player.hand == "R" ? "Right-handed" : "Left-handed", systemImage: "hand.raised")
+                                Text(player.hand == "R" ? "Right-handed" : "Left-handed")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }

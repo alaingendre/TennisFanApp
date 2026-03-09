@@ -10,7 +10,6 @@ import SwiftData
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \Player.name) private var players: [Player]
     @State private var searchText = ""
     @State private var selectedYear = "2025"
     @State private var availableYears: [String] = []
@@ -18,11 +17,7 @@ struct ContentView: View {
     @State private var lastUpdate: Date? = DataUpdater.lastUpdateDate()
     @State private var updateStatus = ""
     @State private var hasCheckedForUpdates = false
-    
-    var filteredPlayers: [Player] {
-        guard !searchText.isEmpty else { return [] }
-        return players.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
-    }
+    @State private var searchResults: [Player] = []
 
     var body: some View {
         NavigationStack {
@@ -64,7 +59,7 @@ struct ContentView: View {
                 }
                 
                 if !searchText.isEmpty {
-                    if filteredPlayers.isEmpty {
+                    if searchResults.isEmpty {
                         VStack(spacing: 16) {
                             Image(systemName: "magnifyingglass")
                                 .font(.system(size: 60))
@@ -75,7 +70,7 @@ struct ContentView: View {
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else {
-                        List(filteredPlayers) { player in
+                        List(searchResults) { player in
                             NavigationLink(destination: PlayerGamesView(player: player, selectedYear: selectedYear)) {
                                 HStack {
                                     Text(flag(for: player.countryCode))
@@ -113,6 +108,9 @@ struct ContentView: View {
             }
             .navigationTitle("Tennis Fan")
             .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search player name")
+            .onChange(of: searchText) { _, newValue in
+                performSearch(newValue)
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     NavigationLink(destination: ProfileView()) {
@@ -143,7 +141,7 @@ struct ContentView: View {
                 }
             }
             .onAppear {
-                if availableYears.isEmpty && !players.isEmpty {
+                if availableYears.isEmpty {
                     loadAvailableYears()
                 }
             }
@@ -152,7 +150,7 @@ struct ContentView: View {
                 // This runs once when the view first appears
                 while availableYears.isEmpty {
                     try? await Task.sleep(nanoseconds: 200_000_000) // 0.2s
-                    if !players.isEmpty && availableYears.isEmpty {
+                    if availableYears.isEmpty {
                         loadAvailableYears()
                     }
                 }
@@ -193,6 +191,21 @@ struct ContentView: View {
         loadAvailableYears()
         
         await checkForUpdates()
+    }
+    
+    private func performSearch(_ query: String) {
+        guard query.count >= 2 else {
+            searchResults = []
+            return
+        }
+        let q = query
+        let descriptor = FetchDescriptor<Player>(
+            predicate: #Predicate<Player> { player in
+                player.name.localizedStandardContains(q)
+            },
+            sortBy: [SortDescriptor(\Player.name)]
+        )
+        searchResults = (try? modelContext.fetch(descriptor)) ?? []
     }
     
     private func checkForUpdates() async {
