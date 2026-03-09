@@ -220,6 +220,18 @@ class DataLoader {
     
     // MARK: - ATP Database (player metadata)
     
+    static func loadPlayerDatabasePublic() -> [String: (height: Int?, backhand: String?, birthdate: Date?)] {
+        return loadPlayerDatabase()
+    }
+    
+    static func loadSeasonPublic(from season: String, modelContext: ModelContext, playerDict: inout [String: Player], playerDB: [String: (height: Int?, backhand: String?, birthdate: Date?)]) {
+        loadSeason(from: season, modelContext: modelContext, playerDict: &playerDict, playerDB: playerDB)
+    }
+    
+    static func load2026Public(modelContext: ModelContext, playerDict: inout [String: Player], playerDB: [String: (height: Int?, backhand: String?, birthdate: Date?)]) {
+        load2026FromDocuments(modelContext: modelContext, playerDict: &playerDict, playerDB: playerDB)
+    }
+    
     private static func loadPlayerDatabase() -> [String: (height: Int?, backhand: String?, birthdate: Date?)] {
         guard let url = Bundle.main.url(forResource: "ATP_Database", withExtension: "csv") else {
             return [:]
@@ -231,7 +243,7 @@ class DataLoader {
         
         var db: [String: (height: Int?, backhand: String?, birthdate: Date?)] = [:]
         
-        guard let content = try? String(contentsOf: url, encoding: .utf8) else { return db }
+        guard let content = try? String(contentsOf: url, encoding: .isoLatin1) else { return db }
         let lines = content.split(separator: "\n")
         
         // Header: "id","player","atpname","birthdate","weight","height","turnedpro","birthplace","coaches","hand","backhand","ioc"

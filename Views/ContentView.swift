@@ -166,24 +166,32 @@ struct ContentView: View {
         let descriptor = FetchDescriptor<Player>()
         if let existing = try? modelContext.fetch(descriptor), !existing.isEmpty {
             loadAvailableYears()
-            // Still check for 2026 updates on subsequent launches
             await checkForUpdates()
             return
         }
         
-        // Load on background thread
-        loadingStatus = "Preparing..."
+        // Load seasons one at a time so the UI can update between each
+        let playerDB = DataLoader.loadPlayerDatabasePublic()
+        var playerDict: [String: Player] = [:]
         
-        await Task.detached {
-            await MainActor.run {
-                DataLoader.loadData(modelContext: modelContext)
-            }
-        }.value
+        let seasons = ["2025", "2024", "2023", "2022", "2021", "2020"]
+        
+        for season in seasons {
+            loadingStatus = "Loading \(season)..."
+            // Yield to let UI update
+            try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
+            DataLoader.loadSeasonPublic(from: season, modelContext: modelContext, playerDict: &playerDict, playerDB: playerDB)
+        }
+        
+        loadingStatus = "Loading 2026..."
+        try? await Task.sleep(nanoseconds: 10_000_000)
+        DataLoader.load2026Public(modelContext: modelContext, playerDict: &playerDict, playerDB: playerDB)
+        
+        try? modelContext.save()
         
         loadingStatus = "Ready!"
         loadAvailableYears()
         
-        // Check for 2026 updates after initial load
         await checkForUpdates()
     }
     
