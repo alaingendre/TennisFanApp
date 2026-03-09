@@ -109,7 +109,13 @@ struct ContentView: View {
             .navigationTitle("Tennis Fan")
             .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search player name")
             .onChange(of: searchText) { _, newValue in
-                performSearch(newValue)
+                // Debounce: only search after user stops typing briefly
+                Task {
+                    try? await Task.sleep(nanoseconds: 200_000_000) // 200ms
+                    if searchText == newValue { // Only if text hasn't changed
+                        performSearch(newValue)
+                    }
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -168,27 +174,27 @@ struct ContentView: View {
             return
         }
         
-        // Load seasons one at a time so the UI can update between each
         let playerDB = DataLoader.loadPlayerDatabasePublic()
         var playerDict: [String: Player] = [:]
         
-        let seasons = ["2025", "2024", "2023", "2022", "2021", "2020"]
-        
-        for season in seasons {
-            loadingStatus = "Loading \(season)..."
-            // Yield to let UI update
-            try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
-            DataLoader.loadSeasonPublic(from: season, modelContext: modelContext, playerDict: &playerDict, playerDB: playerDB)
-        }
-        
-        loadingStatus = "Loading 2026..."
-        try? await Task.sleep(nanoseconds: 10_000_000)
+        // Phase 1: Load recent years first (fast, gets UI responsive)
+        loadingStatus = "Loading recent matches..."
+        DataLoader.loadSeasonPublic(from: "2025", modelContext: modelContext, playerDict: &playerDict, playerDB: playerDB)
+        DataLoader.loadSeasonPublic(from: "2024", modelContext: modelContext, playerDict: &playerDict, playerDB: playerDB)
         DataLoader.load2026Public(modelContext: modelContext, playerDict: &playerDict, playerDB: playerDB)
-        
         try? modelContext.save()
         
-        loadingStatus = "Ready!"
+        // Show UI immediately with 2024-2026
         loadAvailableYears()
+        loadingStatus = ""
+        
+        // Phase 2: Load older years in background (user can already use the app)
+        for season in ["2023", "2022", "2021", "2020"] {
+            try? await Task.sleep(nanoseconds: 50_000_000) // 50ms yield
+            DataLoader.loadSeasonPublic(from: season, modelContext: modelContext, playerDict: &playerDict, playerDB: playerDB)
+            try? modelContext.save()
+            loadAvailableYears() // Update year pills as each year loads
+        }
         
         await checkForUpdates()
     }
@@ -199,12 +205,13 @@ struct ContentView: View {
             return
         }
         let q = query
-        let descriptor = FetchDescriptor<Player>(
+        var descriptor = FetchDescriptor<Player>(
             predicate: #Predicate<Player> { player in
                 player.name.localizedStandardContains(q)
             },
             sortBy: [SortDescriptor(\Player.name)]
         )
+        descriptor.fetchLimit = 20
         searchResults = (try? modelContext.fetch(descriptor)) ?? []
     }
     
