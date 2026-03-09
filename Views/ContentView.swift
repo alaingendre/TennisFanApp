@@ -14,30 +14,32 @@ struct ContentView: View {
     @State private var selectedYear = "2025"
     @State private var availableYears: [String] = []
     @State private var loadingStatus = ""
-    @State private var lastUpdate: Date? = DataUpdater.lastUpdateDate()
-    @State private var updateStatus = ""
+    @State private var isLoading = true
     @State private var hasCheckedForUpdates = false
     @State private var searchResults: [Player] = []
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                if availableYears.isEmpty {
+                // Loading state
+                if isLoading {
                     VStack(spacing: 16) {
                         ProgressView()
                             .scaleEffect(1.5)
                         Text("Loading match data...")
                             .font(.headline)
                             .foregroundColor(.secondary)
-                        Text("\(loadingStatus)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        if !loadingStatus.isEmpty {
+                            Text(loadingStatus)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .task {
-                        await loadDataInBackground()
-                    }
-                } else {
+                }
+                
+                // Year pills (show as soon as any data is loaded)
+                if !availableYears.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 10) {
                             ForEach(availableYears, id: \.self) { year in
@@ -58,61 +60,63 @@ struct ContentView: View {
                     }
                 }
                 
-                if !searchText.isEmpty {
-                    if searchResults.isEmpty {
-                        VStack(spacing: 16) {
-                            Image(systemName: "magnifyingglass")
-                                .font(.system(size: 60))
-                                .foregroundColor(.gray)
-                            Text("No players found")
-                                .font(.headline)
-                                .foregroundColor(.secondary)
-                        }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    } else {
-                        List(searchResults) { player in
-                            NavigationLink(destination: PlayerGamesView(player: player, selectedYear: selectedYear)) {
-                                HStack {
-                                    Text(flag(for: player.countryCode))
-                                        .font(.title2)
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(player.name)
-                                            .font(.headline)
-                                        Text(player.countryCode)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
+                // Search results or empty state (only when not loading)
+                if !isLoading {
+                    if !searchText.isEmpty {
+                        if searchResults.isEmpty {
+                            VStack(spacing: 16) {
+                                Image(systemName: "magnifyingglass")
+                                    .font(.system(size: 60))
+                                    .foregroundColor(.gray)
+                                Text("No players found")
+                                    .font(.headline)
+                                    .foregroundColor(.secondary)
+                            }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        } else {
+                            List(searchResults) { player in
+                                NavigationLink(destination: PlayerGamesView(player: player, selectedYear: selectedYear)) {
+                                    HStack {
+                                        Text(flag(for: player.countryCode))
+                                            .font(.title2)
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(player.name)
+                                                .font(.headline)
+                                            Text(player.countryCode)
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
                                     }
                                 }
                             }
+                            .listStyle(.plain)
                         }
-                        .listStyle(.plain)
+                    } else {
+                        VStack(spacing: 20) {
+                            Spacer()
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 80))
+                                .foregroundColor(.blue.opacity(0.3))
+                            Text("Search for a player")
+                                .font(.title2)
+                                .foregroundColor(.secondary)
+                            Text("Start typing a player name to see results")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal)
+                            Spacer()
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
-                } else {
-                    VStack(spacing: 20) {
-                        Spacer()
-                        Image(systemName: "magnifyingglass")
-                            .font(.system(size: 80))
-                            .foregroundColor(.blue.opacity(0.3))
-                        Text("Search for a player")
-                            .font(.title2)
-                            .foregroundColor(.secondary)
-                        Text("Start typing a player name to see results")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                        Spacer()
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
             .navigationTitle("Tennis Fan")
             .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search player name")
             .onChange(of: searchText) { _, newValue in
-                // Debounce: only search after user stops typing briefly
                 Task {
-                    try? await Task.sleep(nanoseconds: 200_000_000) // 200ms
-                    if searchText == newValue { // Only if text hasn't changed
+                    try? await Task.sleep(nanoseconds: 200_000_000)
+                    if searchText == newValue {
                         performSearch(newValue)
                     }
                 }
@@ -125,79 +129,60 @@ struct ContentView: View {
                     }
                 }
             }
-            .overlay(alignment: .bottom) {
-                if !availableYears.isEmpty && !searchText.isEmpty == false {
-                    VStack(spacing: 4) {
-                        if !updateStatus.isEmpty {
-                            Text(updateStatus)
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        }
-                        if let date = lastUpdate {
-                            Text("2026 data updated: \(date.formatted(date: .abbreviated, time: .shortened))")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .padding(.vertical, 6)
-                    .padding(.horizontal, 12)
-                    .background(.ultraThinMaterial)
-                    .cornerRadius(8)
-                    .padding(.bottom, 8)
-                }
-            }
-            .onAppear {
-                if availableYears.isEmpty {
-                    loadAvailableYears()
-                }
-            }
             .task {
-                // Wait for data to be available, then check for updates
-                // This runs once when the view first appears
-                while availableYears.isEmpty {
-                    try? await Task.sleep(nanoseconds: 200_000_000) // 0.2s
-                    if availableYears.isEmpty {
-                        loadAvailableYears()
-                    }
-                }
-                await checkForUpdates()
+                await loadData()
             }
         }
     }
     
-    private func loadDataInBackground() async {
+    // MARK: - Data Loading
+    
+    private func loadData() async {
         // Check if already loaded
-        let descriptor = FetchDescriptor<Player>()
-        if let existing = try? modelContext.fetch(descriptor), !existing.isEmpty {
-            loadAvailableYears()
+        let countDescriptor = FetchDescriptor<Game>()
+        if let count = try? modelContext.fetchCount(countDescriptor), count > 0 {
+            refreshYears()
+            isLoading = false
             await checkForUpdates()
             return
         }
         
+        // Fresh load — show spinner
+        isLoading = true
         let playerDB = DataLoader.loadPlayerDatabasePublic()
         var playerDict: [String: Player] = [:]
         
-        // Phase 1: Load recent years first (fast, gets UI responsive)
-        loadingStatus = "Loading recent matches..."
-        DataLoader.loadSeasonPublic(from: "2025", modelContext: modelContext, playerDict: &playerDict, playerDB: playerDB)
-        DataLoader.loadSeasonPublic(from: "2024", modelContext: modelContext, playerDict: &playerDict, playerDB: playerDB)
-        DataLoader.load2026Public(modelContext: modelContext, playerDict: &playerDict, playerDB: playerDB)
-        try? modelContext.save()
+        // Load most recent years first
+        let allSeasons = ["2025", "2024", "2026", "2023", "2022", "2021", "2020"]
         
-        // Show UI immediately with 2024-2026
-        loadAvailableYears()
-        loadingStatus = ""
-        
-        // Phase 2: Load older years in background (user can already use the app)
-        for season in ["2023", "2022", "2021", "2020"] {
-            try? await Task.sleep(nanoseconds: 50_000_000) // 50ms yield
-            DataLoader.loadSeasonPublic(from: season, modelContext: modelContext, playerDict: &playerDict, playerDB: playerDB)
+        for (i, season) in allSeasons.enumerated() {
+            loadingStatus = "\(season)..."
+            
+            if season == "2026" {
+                DataLoader.load2026Public(modelContext: modelContext, playerDict: &playerDict, playerDB: playerDB)
+            } else {
+                DataLoader.loadSeasonPublic(from: season, modelContext: modelContext, playerDict: &playerDict, playerDB: playerDB)
+            }
             try? modelContext.save()
-            loadAvailableYears() // Update year pills as each year loads
+            
+            // After first 3 seasons (2025, 2024, 2026), show the UI
+            if i == 2 {
+                refreshYears()
+                isLoading = false
+            }
+            
+            // Yield to let UI render
+            try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
         }
+        
+        // Final refresh with all years
+        refreshYears()
+        loadingStatus = ""
         
         await checkForUpdates()
     }
+    
+    // MARK: - Search
     
     private func performSearch(_ query: String) {
         guard query.count >= 2 else {
@@ -215,39 +200,34 @@ struct ContentView: View {
         searchResults = (try? modelContext.fetch(descriptor)) ?? []
     }
     
+    // MARK: - Year Management
+    
+    private func refreshYears() {
+        // Use a lightweight query — just fetch season strings, not full Game objects
+        let descriptor = FetchDescriptor<Game>()
+        if let games = try? modelContext.fetch(descriptor) {
+            let years = Set(games.map { $0.season })
+            let sorted = Array(years).sorted(by: >)
+            if sorted != availableYears {
+                availableYears = sorted
+                if let first = sorted.first, !sorted.contains(selectedYear) {
+                    selectedYear = first
+                }
+            }
+        }
+    }
+    
+    // MARK: - Updates
+    
     private func checkForUpdates() async {
         guard !hasCheckedForUpdates else { return }
         hasCheckedForUpdates = true
         
-        updateStatus = "Checking for updates..."
-        
         let hasUpdate = await DataUpdater.checkForUpdate()
         
         if hasUpdate {
-            updateStatus = "Updating 2026 data..."
             DataUpdater.reload2026(modelContext: modelContext)
-            loadAvailableYears()
-            lastUpdate = DataUpdater.lastUpdateDate()
-            updateStatus = "✅ Updated!"
-            
-            try? await Task.sleep(nanoseconds: 3_000_000_000)
-            updateStatus = ""
-        } else {
-            // Even if no update, make sure 2026 is in available years
-            loadAvailableYears()
-            lastUpdate = DataUpdater.lastUpdateDate()
-            updateStatus = ""
-        }
-    }
-    
-    private func loadAvailableYears() {
-        let descriptor = FetchDescriptor<Game>()
-        if let games = try? modelContext.fetch(descriptor) {
-            let years = Set(games.map { $0.season })
-            availableYears = Array(years).sorted(by: >)
-            if let first = availableYears.first {
-                selectedYear = first
-            }
+            refreshYears()
         }
     }
 }
