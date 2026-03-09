@@ -227,6 +227,7 @@ class DataLoader {
         
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyyMMdd"
+        dateFormatter.timeZone = TimeZone(identifier: "UTC")
         
         var db: [String: (height: Int?, backhand: String?, birthdate: Date?)] = [:]
         
@@ -244,10 +245,6 @@ class DataLoader {
             let backhand = col[10].isEmpty ? nil : col[10]
             let bdStr = col[3].trimmingCharacters(in: .whitespacesAndNewlines)
             let birthdate = dateFormatter.date(from: bdStr)
-            
-            if playerId == "A0E2" {
-                print("  DEBUG ATP_DB: Alcaraz id=[\(playerId)] bd=[\(bdStr)] parsed=\(String(describing: birthdate)) ht=\(String(describing: height))")
-            }
             
             db[playerId] = (height, backhand, birthdate)
         }
@@ -304,6 +301,7 @@ class DataLoader {
         
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyyMMdd"
+        dateFormatter.timeZone = TimeZone(identifier: "UTC")
         var gamesAdded = 0
         
         do {
@@ -440,6 +438,7 @@ class DataLoader {
         // Load using the same parser, but from Documents URL
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyyMMdd"
+        dateFormatter.timeZone = TimeZone(identifier: "UTC")
         var gamesAdded = 0
         
         do {

@@ -99,6 +99,7 @@ class DataUpdater {
         // Parse new matches first (don't touch database yet)
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyyMMdd"
+        dateFormatter.timeZone = TimeZone(identifier: "UTC")
         
         struct ParsedMatch {
             let matchKey: String
